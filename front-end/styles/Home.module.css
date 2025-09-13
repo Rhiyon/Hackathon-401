@@ -5,7 +5,8 @@
 
 .navbar {
   display: flex;
-  justify-content: center; /* This centers the navigation items */
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem 2rem;
   border-bottom: 1px solid #eee;
   font-size: 0.95rem;
@@ -14,16 +15,15 @@
 .navbar ul {
   list-style: none;
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   padding: 0;
   margin: 0;
-  position: relative; /* Essential for positioning the underline */
+  position: relative;
 }
 
 .navbar li {
-  padding: 10px 20px;
   cursor: pointer;
-  z-index: 1; /* Ensures text is on top of the underline */
+  z-index: 1;
 }
 
 .navbar a {
@@ -44,9 +44,15 @@
 }
 
 .navRight {
-  /* This is now on its own, not affecting the centering */
   display: flex;
   gap: 1.5rem;
+}
+
+/* New style to align icons and text in the navRight section */
+.navRight a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .main {
@@ -72,7 +78,8 @@
 
 .underline {
   position: absolute;
-  bottom: 0;
+  /* Adjusting the bottom value to move the underline down */
+  bottom: -4px;
   height: 2px;
   background-color: #0070f3;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;

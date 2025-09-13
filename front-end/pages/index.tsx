@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Home.module.css";
+import { FaRegQuestionCircle, FaCog } from "react-icons/fa";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("applications");
+  const [applications, setApplications] = useState([]); // State to hold applications data
+  const [loading, setLoading] = useState(true); // State to track loading status
+  const [error, setError] = useState(null); // State to handle errors
   const underlineRef = useRef(null);
   const navbarRef = useRef(null);
 
@@ -23,7 +27,35 @@ export default function Home() {
         underlineRef.current.style.width = `${activeRect.width}px`;
       }
     }
-  }, [activeTab]); // This effect runs every time activeTab changes
+  }, [activeTab]);
+
+  // Fetch data from the backend when the component mounts
+  useEffect(() => {
+    async function fetchApplications() {
+      try {
+        const response = await fetch("http://localhost:8000/applications"); // Use your backend URL
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setApplications(data);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchApplications();
+  }, []); // Empty dependency array ensures this effect runs only once on mount
+
+  // You can now render a loading state, error message, or your data
+  if (loading) {
+    return <div>Loading applications...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -56,10 +88,25 @@ export default function Home() {
           <div ref={underlineRef} className={styles.underline}></div>
         </ul>
         <div className={styles.navRight}>
-          <a href="#">Support</a>
-          <a href="#">Settings</a>
+          <a href="#">
+            <FaRegQuestionCircle />
+            Support
+          </a>
+          <a href="#">
+            <FaCog />
+            Settings
+          </a>
         </div>
       </nav>
+      {/* Example of how you can use the fetched data */}
+      <div>
+        <h2>Applications:</h2>
+        <ul>
+          {applications.map((app) => (
+            <li key={app.application_id}>{app.company} - {app.job_title}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
