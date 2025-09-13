@@ -1,24 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Home.module.css";
-import { FaRegQuestionCircle, FaCog } from "react-icons/fa";
+import { FaRegQuestionCircle, FaCog,FaSignOutAlt } from "react-icons/fa";
+import router from "next/router";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("applications");
-  const [applications, setApplications] = useState([]); // State to hold applications data
-  const [loading, setLoading] = useState(true); // State to track loading status
-  const [error, setError] = useState(null); // State to handle errors
   const underlineRef = useRef(null);
   const navbarRef = useRef(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      router.push("/authPage");
+    }
+  }, []);
 
   // Animate the underline whenever the activeTab changes
   useEffect(() => {
     if (underlineRef.current && navbarRef.current) {
-      const activeElement = navbarRef.current.querySelector(`.${styles.active}`);
+      const activeElement = navbarRef.current.querySelector(
+        `.${styles.active}`
+      );
       if (activeElement) {
         // Get the position and width relative to the parent ul
         const activeRect = activeElement.getBoundingClientRect();
         const parentRect = navbarRef.current.getBoundingClientRect();
-        
+
         // Calculate the translateX value to move the underline
         const transformValue = activeRect.left - parentRect.left;
 
@@ -27,35 +34,7 @@ export default function Home() {
         underlineRef.current.style.width = `${activeRect.width}px`;
       }
     }
-  }, [activeTab]);
-
-  // Fetch data from the backend when the component mounts
-  useEffect(() => {
-    async function fetchApplications() {
-      try {
-        const response = await fetch("http://localhost:8000/applications"); // Use your backend URL
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setApplications(data);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchApplications();
-  }, []); // Empty dependency array ensures this effect runs only once on mount
-
-  // You can now render a loading state, error message, or your data
-  if (loading) {
-    return <div>Loading applications...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  }, [activeTab]); // This effect runs every time activeTab changes
 
   return (
     <div className={styles.container}>
@@ -96,17 +75,18 @@ export default function Home() {
             <FaCog />
             Settings
           </a>
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              router.push("/authPage");
+            }}
+            className={styles.logoutBtn}
+          >
+            <FaSignOutAlt />
+            Logout
+          </button>
         </div>
       </nav>
-      {/* Example of how you can use the fetched data */}
-      <div>
-        <h2>Applications:</h2>
-        <ul>
-          {applications.map((app) => (
-            <li key={app.application_id}>{app.company} - {app.job_title}</li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }

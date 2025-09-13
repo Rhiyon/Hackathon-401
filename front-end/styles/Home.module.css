@@ -84,3 +84,23 @@
   background-color: #0070f3;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
 }
+
+.logoutBtn {
+  background-color: transparent; /* matches navbar links */
+  border: 1px solid #ccc;       /* subtle border for button feel */
+  border-radius: 6px;           /* slightly rounded corners */
+  padding: 0.3rem 0.8rem;       /* small padding to match link height */
+  font-size: 0.95rem;           /* same as navbar text */
+  color: #555;                  /* same as navbar links */
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.logoutBtn:hover {
+  background-color: #f0f0f0;    /* subtle hover effect */
+  border-color: #0070f3;        /* match underline color on hover */
+  color: #0070f3;
+}
