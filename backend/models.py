@@ -19,12 +19,12 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    uid: int
+    uid: str
     employer_uid: Optional[int] = None
     resume_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -35,19 +35,19 @@ class ResumeBase(BaseModel):
 
 
 class ResumeCreate(ResumeBase):
-    child_uid: int
+    child_uid: str
     parent_uid: Optional[int] = None
 
 
 class Resume(ResumeBase):
-    resume_id: int
-    child_uid: int
+    resume_id: str
+    child_uid: str
     parent_uid: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -62,16 +62,16 @@ class JobPostingBase(BaseModel):
 
 
 class JobPostingCreate(JobPostingBase):
-    employer_uid: int
+    employer_uid: str
 
 
 class JobPosting(JobPostingBase):
-    job_id: int
+    job_id: str
     datetime: datetime
     employer_uid: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -82,20 +82,20 @@ class ApplicationBase(BaseModel):
 
 
 class ApplicationCreate(ApplicationBase):
-    job_id: int
-    user_uid: int
-    resume_id: int
+    job_id: str
+    user_uid: str
+    resume_id: str
 
 
 class Application(ApplicationBase):
     application_id: int
     job_id: int
-    user_uid: int
-    resume_id: int
+    user_uid: str
+    resume_id: str
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -106,18 +106,18 @@ class NotificationBase(BaseModel):
 
 
 class NotificationCreate(NotificationBase):
-    from_uid: int
-    to_uid: int
+    from_uid: str
+    to_uid: str
 
 
 class Notification(NotificationBase):
     notification_id: int
-    from_uid: int
+    from_uid: str
     to_uid: int
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -139,4 +139,4 @@ class Chat(ChatBase):
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
