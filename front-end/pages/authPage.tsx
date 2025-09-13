@@ -4,7 +4,7 @@ import styles from "../styles/AuthPage.module.css";
 import { useRouter } from "next/router";
 
 export default function AuthPage() {
-  const [isRegister, setIsRegister] = useState(false); // 👈 start in login mode
+  const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -56,6 +56,7 @@ export default function AuthPage() {
   };
 
   return (
+    <>
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <h2>{isRegister ? "Create Account" : "Welcome Back"}</h2>
@@ -127,5 +128,6 @@ export default function AuthPage() {
         {message && <p className={styles.message}>{message}</p>}
       </div>
     </div>
+    </>
   );
 }
