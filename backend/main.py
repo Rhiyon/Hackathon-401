@@ -18,14 +18,15 @@ from database import db  # Motor async client/DB
 
 app = FastAPI(title="Hackathon API")
 
-# CORS for Next.js frontend
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ---------------------
 # Helpers
@@ -91,6 +92,13 @@ def _mk_crud(
         if not d:
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
         d = _serialize_id(d)
+        d[id_field] = d.pop("_id")
+        return ReadModel(**d)
+    
+    # GET ALL
+    @app.get(f"/{coll_name}", response_model=ReadModel, tags=[tag])
+    async def get_obj(obj_id: str):
+        d = await coll.find()
         d[id_field] = d.pop("_id")
         return ReadModel(**d)
 
