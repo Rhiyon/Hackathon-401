@@ -15,8 +15,7 @@ const ProfilePage: React.FC = () => {
 
 
   return (
-    <div>
-        <h1>Profile</h1>
+    <div className={styles.profileContainer}>
         <div className={styles.fieldAvatar}>
             <div className={styles.fields}>
                 <div className={styles.row}>
