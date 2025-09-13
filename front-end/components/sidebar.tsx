@@ -7,6 +7,8 @@ import { FaHome, FaFileAlt, FaCog, FaEnvelope, FaBell, FaUserCircle } from "reac
 export default function Sidebar() {
   // Use a state variable to manage the active path
   const [activePath, setActivePath] = useState("/");
+  const [showNotifications, setShowNotifications] = useState(false);
+
 
   const navItems = [
     { name: "Home", path: "/", icon: <FaHome /> },
@@ -15,7 +17,7 @@ export default function Sidebar() {
   ];
 
   const bottomNavItems = [
-    { name: "Notifications", path: "/notifications", icon: <FaBell /> },
+    { name: "Notifications", path: "/notifications", icon: <FaBell />, isNotification: true },
     { name: "Profile", path: "/profile", icon: <FaUserCircle /> },
     { name: "Settings", path: "/settings", icon: <FaCog /> },
   ];
@@ -28,7 +30,11 @@ export default function Sidebar() {
           <Link
             key={item.path}
             href={item.path}
-            onClick={() => setActivePath(item.path)} // Update the active path on click
+            onClick={() => {
+              setActivePath(item.path);
+              setShowNotifications(false);
+
+            }} // Update the active path on click
             className={`${styles.navItem} ${
               activePath === item.path ? styles.active : ""
             }`}
@@ -37,20 +43,52 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+
+
       <div className={styles.userNav}>
-        {bottomNavItems.map((item) => (
-          <Link
-            key={item.path}
-            href={item.path}
-            onClick={() => setActivePath(item.path)} // Update the active path on click
-            className={`${styles.navItem} ${
-              activePath === item.path ? styles.active : ""
-            }`}
-          >
-            {item.icon}
-          </Link>
-        ))}
+        {bottomNavItems.map((item) =>
+          item.isNotification ? (
+            // Notification button toggles popup
+            <div
+              key={item.path}
+              className={`${styles.navItem} ${
+                activePath === item.path ? styles.active : ""
+              }`}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              {item.icon}
+            </div>
+          ) : (
+            // Normal navigation buttons
+            <Link
+              key={item.path}
+              href={item.path}
+              onClick={() => {
+                setActivePath(item.path);
+                setShowNotifications(false); // close popup if open
+              }}
+              className={`${styles.navItem} ${
+                activePath === item.path ? styles.active : ""
+              }`}
+            >
+              {item.icon}
+            </Link>
+          )
+        )}
       </div>
+
+      {showNotifications && (
+        <div className={styles.notificationPopup}>
+          <h4>Notifications</h4>
+          <ul>
+            <li>You have a new message from Maria.</li>
+            <li>You have a new message from Maria.</li>
+            <li>You have a new message from Maria.</li>
+            <li>You have a new message from Maria.</li>
+          </ul>
+        </div>
+      )}
+
     </div>
   );
 }
