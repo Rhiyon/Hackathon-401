@@ -1,51 +1,65 @@
-"use client"; // if using app router
-
-import { useEffect, useState } from "react";
-
-interface User {
-  uid: string;
-  name: string;
-  email: string;
-  created_at: string;
-}
+import React, { useState, useEffect, useRef } from "react";
+import styles from "../styles/Home.module.css";
 
 export default function Home() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("applications");
+  const underlineRef = useRef(null);
+  const navbarRef = useRef(null);
 
-  console.log(users.length)
-
+  // Animate the underline whenever the activeTab changes
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/users")
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data: User[]) => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to fetch users");
-        setLoading(false);
-      });
-  }, []);
+    if (underlineRef.current && navbarRef.current) {
+      const activeElement = navbarRef.current.querySelector(`.${styles.active}`);
+      if (activeElement) {
+        // Get the position and width relative to the parent ul
+        const activeRect = activeElement.getBoundingClientRect();
+        const parentRect = navbarRef.current.getBoundingClientRect();
+        
+        // Calculate the translateX value to move the underline
+        const transformValue = activeRect.left - parentRect.left;
 
-  if (loading) return <div>Loading users...</div>;
-  if (error) return <div>{error}</div>;
+        // Apply the styles to the underline
+        underlineRef.current.style.transform = `translateX(${transformValue}px)`;
+        underlineRef.current.style.width = `${activeRect.width}px`;
+      }
+    }
+  }, [activeTab]); // This effect runs every time activeTab changes
 
   return (
-    <div>
-      <h1>Users</h1>
-      <ul>
-        {users.map((u) => (
-          <li key={u.uid}>
-            {u.name} — {u.email}
+    <div className={styles.container}>
+      <nav className={styles.navbar}>
+        <ul ref={navbarRef}>
+          <li
+            onClick={() => setActiveTab("contracts")}
+            className={activeTab === "contracts" ? styles.active : ""}
+          >
+            <a href="#">Contracts</a>
           </li>
-        ))}
-      </ul>
+          <li
+            onClick={() => setActiveTab("offers")}
+            className={activeTab === "offers" ? styles.active : ""}
+          >
+            <a href="#">Offers</a>
+          </li>
+          <li
+            onClick={() => setActiveTab("applications")}
+            className={activeTab === "applications" ? styles.active : ""}
+          >
+            <a href="#">Applications</a>
+          </li>
+          <li
+            onClick={() => setActiveTab("interviews")}
+            className={activeTab === "interviews" ? styles.active : ""}
+          >
+            <a href="#">Interviews</a>
+          </li>
+          <div ref={underlineRef} className={styles.underline}></div>
+        </ul>
+        <div className={styles.navRight}>
+          <a href="#">Support</a>
+          <a href="#">Settings</a>
+        </div>
+      </nav>
     </div>
   );
 }

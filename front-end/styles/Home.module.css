@@ -1,0 +1,79 @@
+.container {
+  font-family: system-ui, sans-serif;
+  color: #333;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center; /* This centers the navigation items */
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  padding: 0;
+  margin: 0;
+  position: relative; /* Essential for positioning the underline */
+}
+
+.navbar li {
+  padding: 10px 20px;
+  cursor: pointer;
+  z-index: 1; /* Ensures text is on top of the underline */
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #555;
+  font-weight: 500;
+  transition: color 0.3s ease-in-out;
+}
+
+.navbar li:hover a {
+  color: #0070f3;
+}
+
+.active a {
+  color: #4f46e5;
+  font-weight: 500;
+  padding-bottom: 2px;
+}
+
+.navRight {
+  /* This is now on its own, not affecting the centering */
+  display: flex;
+  gap: 1.5rem;
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 75vh;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #444;
+}
+
+.emptyState .icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.underline {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background-color: #0070f3;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
