@@ -1,6 +1,10 @@
 .container {
   font-family: system-ui, sans-serif;
   color: #333;
+  background-color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
@@ -10,6 +14,7 @@
   padding: 1rem 2rem;
   border-bottom: 1px solid #eee;
   font-size: 0.95rem;
+  background-color: #ffffff;
 }
 
 .navbar ul {
@@ -83,4 +88,28 @@
   height: 2px;
   background-color: #0070f3;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.applicationsContent {
+  flex: 1;
+  padding: 2rem;
+  background-color: #ffffff;
+  color: #333;
+}
+
+.applicationsHeader {
+  margin-bottom: 2rem;
+}
+
+.applicationsHeader h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
