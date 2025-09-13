@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Home.module.css";
-import { FaRegQuestionCircle, FaCog } from "react-icons/fa";
+import { FaRegQuestionCircle, FaCog,FaSignOutAlt } from "react-icons/fa";
+import router from "next/router";
 import FilterTabs from "../components/FilterTabs";
 import ApplicationCard from "../components/ApplicationCard";
 import { mockApplications } from "../data/mockApplications";
@@ -14,16 +15,27 @@ export default function Home() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
   const underlineRef = useRef<HTMLDivElement>(null);
   const navbarRef = useRef<HTMLUListElement>(null);
+  // const underlineRef = useRef(null);
+  // const navbarRef = useRef(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      router.push("/authPage");
+    }
+  }, []);
 
   // Animate the underline whenever the activeTab changes
   useEffect(() => {
     if (underlineRef.current && navbarRef.current) {
-      const activeElement = navbarRef.current.querySelector(`.${styles.active}`);
+      const activeElement = navbarRef.current.querySelector(
+        `.${styles.active}`
+      );
       if (activeElement) {
         // Get the position and width relative to the parent ul
         const activeRect = activeElement.getBoundingClientRect();
         const parentRect = navbarRef.current.getBoundingClientRect();
-        
+
         // Calculate the translateX value to move the underline
         const transformValue = activeRect.left - parentRect.left;
 
@@ -32,7 +44,7 @@ export default function Home() {
         underlineRef.current.style.width = `${activeRect.width}px`;
       }
     }
-  }, [activeTab]);
+  }, [activeTab]); // This effect runs every time activeTab changes
 
   // Use mock data for now
   useEffect(() => {
@@ -105,6 +117,16 @@ export default function Home() {
             <FaCog />
             Settings
           </a>
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              router.push("/authPage");
+            }}
+            className={styles.logoutBtn}
+          >
+            <FaSignOutAlt />
+            Logout
+          </button>
         </div>
       </nav>
       
