@@ -10,6 +10,7 @@ export default function Sidebar() {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Applications", path: "/applications" },
+    { name: "Profile", path: "/profile"},
     { name: "Settings", path: "/settings" },
   ];
 
