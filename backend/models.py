@@ -19,12 +19,12 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    uid: int
+    uid: Optional[str] = None
     employer_uid: Optional[int] = None
     resume_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -47,7 +47,7 @@ class Resume(ResumeBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -71,7 +71,7 @@ class JobPosting(JobPostingBase):
     employer_uid: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -95,7 +95,7 @@ class Application(ApplicationBase):
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -117,7 +117,7 @@ class Notification(NotificationBase):
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # =========================
@@ -139,4 +139,4 @@ class Chat(ChatBase):
     datetime: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

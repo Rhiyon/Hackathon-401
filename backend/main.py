@@ -21,7 +21,11 @@ app = FastAPI(title="Hackathon API")
 # CORS for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
+<<<<<<< Updated upstream
     allow_origins=["http://localhost:3000"],
+=======
+    allow_origins=["*"],   # allows all
+>>>>>>> Stashed changes
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,7 +97,11 @@ def _mk_crud(
         d = _serialize_id(d)
         d[id_field] = d.pop("_id")
         return ReadModel(**d)
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     # UPDATE
     @app.put(f"/{coll_name}/{{obj_id}}", response_model=Dict[str, str], tags=[tag])
     async def update_obj(obj_id: str, payload: CreateModel):
