@@ -1,0 +1,33 @@
+.filterContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filterTab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.filterTab:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.filterTab.active {
+  background-color: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+.filterTab.active:hover {
+  background-color: #4338ca;
+  border-color: #4338ca;
+}

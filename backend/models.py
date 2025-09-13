@@ -88,8 +88,8 @@ class ApplicationCreate(ApplicationBase):
 
 
 class Application(ApplicationBase):
-    application_id: int
-    job_id: int
+    application_id: str
+    job_id: str
     user_uid: str
     resume_id: str
     datetime: datetime

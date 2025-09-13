@@ -1,7 +1,7 @@
 from typing import List, Dict, Callable, Any
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException,Body
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId, errors as bson_errors
 
@@ -112,6 +112,14 @@ def _mk_crud(
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
         return {"message": "Deleted successfully"}
 
+
+@app.post("/login", tags=["users"])
+async def login_user(email: str = Body(...), password: str = Body(...)):
+    user = await db.users.find_one({"email": email, "password": password})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    user["_id"] = str(user["_id"])
+    return {"message": f"Welcome back {user['name']}!", "user": user}
 # ---------------------
 # Defaults per resource
 # ---------------------

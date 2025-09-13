@@ -1,29 +1,34 @@
 .container {
   font-family: system-ui, sans-serif;
   color: #333;
+  background-color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
   display: flex;
-  justify-content: center; /* This centers the navigation items */
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem 2rem;
   border-bottom: 1px solid #eee;
   font-size: 0.95rem;
+  background-color: #ffffff;
 }
 
 .navbar ul {
   list-style: none;
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   padding: 0;
   margin: 0;
-  position: relative; /* Essential for positioning the underline */
+  position: relative;
 }
 
 .navbar li {
-  padding: 10px 20px;
   cursor: pointer;
-  z-index: 1; /* Ensures text is on top of the underline */
+  z-index: 1;
 }
 
 .navbar a {
@@ -44,9 +49,15 @@
 }
 
 .navRight {
-  /* This is now on its own, not affecting the centering */
   display: flex;
   gap: 1.5rem;
+}
+
+/* New style to align icons and text in the navRight section */
+.navRight a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .main {
@@ -72,8 +83,54 @@
 
 .underline {
   position: absolute;
-  bottom: 0;
+  /* Adjusting the bottom value to move the underline down */
+  bottom: -4px;
   height: 2px;
   background-color: #0070f3;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.logoutBtn {
+  background-color: transparent; /* matches navbar links */
+  border: 1px solid #ccc;       /* subtle border for button feel */
+  border-radius: 6px;           /* slightly rounded corners */
+  padding: 0.3rem 0.8rem;       /* small padding to match link height */
+  font-size: 0.95rem;           /* same as navbar text */
+  color: #555;                  /* same as navbar links */
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.logoutBtn:hover {
+  background-color: #f0f0f0;    /* subtle hover effect */
+  border-color: #0070f3;        /* match underline color on hover */
+  color: #0070f3;
+}
+
+
+.applicationsContent {
+  flex: 1;
+  padding: 2rem;
+  background-color: #ffffff;
+  color: #333;
+}
+
+.applicationsHeader {
+  margin-bottom: 2rem;
+}
+
+.applicationsHeader h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
