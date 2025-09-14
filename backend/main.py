@@ -5,6 +5,11 @@ from fastapi import FastAPI, HTTPException,Body
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId, errors as bson_errors
 
+import asyncio, tempfile
+from pathlib import Path
+from fastapi import Response
+
+
 # Import your Pydantic models (v2)
 from models import (
     User, UserCreate,
@@ -31,6 +36,22 @@ app.add_middleware(
 # ---------------------
 # Helpers
 # ---------------------
+
+async def _run_tectonic(tex_path: Path, outdir: Path) -> None:
+    """
+    Run 'tectonic -X compile main.tex --outdir <outdir>' and raise on error.
+    """
+    proc = await asyncio.create_subprocess_exec(
+        "tectonic", "-X", "compile", str(tex_path),
+        "--outdir", str(outdir), "--keep-logs",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    out, err = await proc.communicate()
+    if proc.returncode != 0:
+        msg = ((err or out) or b"").decode("utf-8", "ignore")
+        raise RuntimeError(f"LaTeX compile failed:\n{msg}")
+
 
 def oid(id_str: str) -> ObjectId:
     try:
@@ -178,6 +199,56 @@ _mk_crud(
     ReadModel=Resume,
     defaults=with_created_at,
 )
+
+@app.get("/resumes/{resume_id}/pdf", tags=["resumes"])
+async def get_resume_pdf(resume_id: str):
+    # Fetch the resume document by Mongo _id (your CRUD uses ObjectId)
+    doc = await db.resumes.find_one({"_id": oid(resume_id)})
+    if not doc or not doc.get("content"):
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    tex_source = doc["content"]
+
+    # If the stored text is only a fragment (no \documentclass), wrap it
+    if "\\begin{document}" not in tex_source:
+        tex_source = rf"""\documentclass[10pt]{{article}}
+        \usepackage[margin=1in]{{geometry}}
+        \usepackage{{hyperref}}
+        \usepackage{{enumitem}}
+        \begin{document}
+        {tex_source}
+        \end{document}
+        """.strip()
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmpdir = Path(tmp)
+            tex_path = tmpdir / "main.tex"
+            tex_path.write_text(tex_source, encoding="utf-8")
+
+            # If you reference local assets (images/.bib), write them into tmpdir here.
+
+            await _run_tectonic(tex_path, tmpdir)
+
+            pdf_path = tmpdir / "main.pdf"
+            if not pdf_path.exists():
+                raise RuntimeError("PDF not created")
+            pdf_bytes = pdf_path.read_bytes()
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="resume_{resume_id}.pdf"',
+                "Cache-Control": "public, max-age=60",
+            },
+        )
+
+    except RuntimeError as e:
+        # LaTeX errors surface as 400 with the compile log
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}")
 
 # ---------------------
 # Job Postings

@@ -3,60 +3,6 @@ import { GetServerSideProps } from "next";
 import { useCallback, useState } from "react";
 import { Pencil } from "lucide-react";
 
-function extractBody(src: string): string {
-  return src
-    .replace(/^[\s\S]*\\begin\{document\}\s*/,'')
-    .replace(/\\end\{document\}[\s\S]*$/,'')
-    .trim();
-}
-
-function unescapeEscapes(s: string): string {
-  return s
-    .replace(/\\r\\n/g, '\n')
-    .replace(/\\n/g, '\n')
-    .replace(/\\t/g, '\t')
-    .replace(/\\\\/g, '\\');
-}
-
-function processSections(s: string): string {
-  return s
-    // Sections
-    .replace(/\\section\*{([^}]*)}/g, (_, title) => `\n${title.toUpperCase()}\n`)
-    // Subsections
-    .replace(/\\subsection\*{([^}]*)}/g, (_, title) => `\n${title}\n`)
-    // Bold text (allow optional space after backslash)
-    .replace(/\\\s*textbf{([^}]*)}/g, (_, text) => `**${text}**`)
-    // Replace LaTeX newlines
-    .replace(/\\\\/g, '\n')
-    // Strip stray single backslashes
-    .replace(/\\/g, '')
-    .trim();
-}
-
-
-
-// // Turn LaTeX sections into readable headings and clean breaks
-// function processSections(src: string): string {
-//   let out = src;
-
-//   // 1) convert LaTeX line breaks to real newlines
-//   out = out.replace(/\\\\\s*/g, "\n");
-
-//   // 2) headings
-//   out = out.replace(/\\section\*?\{([^}]*)\}\s*/g, (_m, t) => `\n# ${t}\n`);
-//   out = out.replace(/\\subsection\*?\{([^}]*)\}\s*/g, (_m, t) => `\n## ${t}\n`);
-
-//   // 3) bold
-//   out = out.replace(/\\textbf\{([^}]*)\}/g, (_m, t) => `**${t}**`);
-
-//   // 4) remove any orphan backslash-only lines left by TeX breaks
-//   out = out.replace(/^\s*\\\s*$/gm, "");
-
-//   // 5) collapse extra blank lines
-//   out = out.replace(/\n{3,}/g, "\n\n");
-
-//   return out.trim();
-// }
 
 type Resume = {
   resume_id: string;
@@ -86,14 +32,7 @@ export default function ResumePage({ resume }: Props) {
   const [copied, setCopied] = useState(false);
   const apiPublic =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-  const onCopy = useCallback(async () => {
-    if (!resume) return;
-    await navigator.clipboard.writeText(resume.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  }, [resume]);
-
+    
   if (!resume) {
     return (
       <main className="mx-auto max-w-5xl p-8">
@@ -108,15 +47,11 @@ export default function ResumePage({ resume }: Props) {
       </main>
     );
   }
-
+    const pdfUrl = `${apiPublic}/resumes/${resume.resume_id}/pdf`;
     const created = new Date(resume.created_at).toLocaleDateString();
     const updated = resume.updated_at
         ? new Date(resume.updated_at).toLocaleDateString()
         : null;
-
-    const body = extractBody(resume.content);              // remove \begin{document}...\end{document}
-    const unescaped = unescapeEscapes(body);               // turn \\n into actual newlines
-    const plain = processSections(unescaped);  
 
   return (
     <main className="mx-auto max-w-5xl p-8 space-y-6 bg-blue-50 min-h-screen">
@@ -146,9 +81,17 @@ export default function ResumePage({ resume }: Props) {
         </div>
       </header>
       {/* LaTeX content */}
-      <pre className="whitespace-pre-wrap rounded-xl bg-gray-50 p-6 font-mono text-[13px] leading-6 text-gray-800 border-0 shadow-sm">
-        {plain}
-      </pre>
+      <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="p-2">
+        <iframe
+          src={pdfUrl}
+          width="100%"
+          height={900}
+          style={{ border: "none" }}
+          title="Resume PDF"
+        />
+        </div>
+      </section>
     </main>
   );
 }
