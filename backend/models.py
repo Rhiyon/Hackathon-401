@@ -1,6 +1,6 @@
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr,Field
 
 
 
@@ -12,6 +12,7 @@ class UserBase(BaseModel):
     age: Optional[int] = None
     email: EmailStr
     company: Optional[str] = None
+    employerFlag: bool = False 
 
 
 class UserCreate(UserBase):
@@ -54,21 +55,23 @@ class Resume(ResumeBase):
 # Job Posting Models
 # =========================
 class JobPostingBase(BaseModel):
-    name: str
+    title: str
     description: str
     location: str
     company: str
-    pay: float
+    salary_min: float
+    salary_max: float
 
 
 class JobPostingCreate(JobPostingBase):
-    employer_uid: str
-
+    employer_id: str  # matches what front-end sends
+    datetime: Optional[datetime] = None
+    created_at: Optional[datetime] = None
 
 class JobPosting(JobPostingBase):
     job_id: str
     datetime: datetime
-    employer_uid: int
+    employer_id: str  # use string to match frontend
 
     class Config:
         from_attributes = True
