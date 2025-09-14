@@ -5,6 +5,11 @@ from fastapi import FastAPI, HTTPException,Body
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId, errors as bson_errors
 
+import asyncio, tempfile
+from pathlib import Path
+from fastapi import Response
+
+
 # Import your Pydantic models (v2)
 from models import (
     User, UserCreate,
@@ -36,11 +41,50 @@ app.include_router(applications_router)
 # Helpers
 # ---------------------
 
+async def _run_tectonic(tex_path: Path, outdir: Path) -> None:
+    """
+    Run 'tectonic -X compile main.tex --outdir <outdir>' and raise on error.
+    """
+    proc = await asyncio.create_subprocess_exec(
+        "tectonic", "-X", "compile", str(tex_path),
+        "--outdir", str(outdir), "--keep-logs",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    out, err = await proc.communicate()
+    if proc.returncode != 0:
+        msg = ((err or out) or b"").decode("utf-8", "ignore")
+        raise RuntimeError(f"LaTeX compile failed:\n{msg}")
+
+
 def oid(id_str: str) -> ObjectId:
     try:
         return ObjectId(id_str)
     except bson_errors.InvalidId:
         raise HTTPException(status_code=400, detail="Invalid id")
+    
+def _stringify_oids(value):
+    """Recursively convert any bson.ObjectId to str."""
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _stringify_oids(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_stringify_oids(v) for v in value]
+    return value
+
+def _jsonify_doc(doc: dict, id_field: str) -> dict:
+    """
+    Convert a Mongo doc into an API-friendly dict:
+    - _id -> id_field (stringified)
+    - any other ObjectId fields -> str
+    """
+    if not doc:
+        return doc
+    out = _stringify_oids(doc)
+    out[id_field] = str(out.pop("_id"))  # rename _id
+    return out
+
 
 def _serialize_id(doc: dict) -> dict:
     """Mongo ObjectId -> string."""
@@ -84,8 +128,7 @@ def _mk_crud(
     async def list_objs():
         out: List[ReadModel] = []
         async for d in coll.find():
-            d = _serialize_id(d)
-            d[id_field] = d.pop("_id")
+            d = _jsonify_doc(d, id_field)
             out.append(ReadModel(**d))
         return out
 
@@ -95,8 +138,7 @@ def _mk_crud(
         d = await coll.find_one({"_id": oid(obj_id)})
         if not d:
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
-        d = _serialize_id(d)
-        d[id_field] = d.pop("_id")
+        d = _jsonify_doc(d, id_field)
         return ReadModel(**d)
     
     # UPDATE
@@ -217,6 +259,56 @@ _mk_crud(
     ReadModel=Resume,
     defaults=with_created_at,
 )
+
+@app.get("/resumes/{resume_id}/pdf", tags=["resumes"])
+async def get_resume_pdf(resume_id: str):
+    # Fetch the resume document by Mongo _id (your CRUD uses ObjectId)
+    doc = await db.resumes.find_one({"_id": oid(resume_id)})
+    if not doc or not doc.get("content"):
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    tex_source = doc["content"]
+
+    # If the stored text is only a fragment (no \documentclass), wrap it
+    if "\\begin{document}" not in tex_source:
+        tex_source = rf"""\documentclass[10pt]{{article}}
+        \usepackage[margin=1in]{{geometry}}
+        \usepackage{{hyperref}}
+        \usepackage{{enumitem}}
+        \begin{document}
+        {tex_source}
+        \end{document}
+        """.strip()
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmpdir = Path(tmp)
+            tex_path = tmpdir / "main.tex"
+            tex_path.write_text(tex_source, encoding="utf-8")
+
+            # If you reference local assets (images/.bib), write them into tmpdir here.
+
+            await _run_tectonic(tex_path, tmpdir)
+
+            pdf_path = tmpdir / "main.pdf"
+            if not pdf_path.exists():
+                raise RuntimeError("PDF not created")
+            pdf_bytes = pdf_path.read_bytes()
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="resume_{resume_id}.pdf"',
+                "Cache-Control": "public, max-age=60",
+            },
+        )
+
+    except RuntimeError as e:
+        # LaTeX errors surface as 400 with the compile log
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}")
 
 # ---------------------
 # Job Postings
