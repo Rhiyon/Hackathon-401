@@ -1,7 +1,7 @@
 from typing import List, Dict, Callable, Any
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException,Body
+from fastapi import FastAPI, HTTPException, Body, Query, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId, errors as bson_errors
 
@@ -18,6 +18,8 @@ from database import db  # Motor async client/DB
 
 app = FastAPI(title="Hackathon API")
 
+users_collection = db.users
+router = APIRouter()
 
 app.add_middleware(
     CORSMiddleware,
@@ -120,6 +122,21 @@ async def login_user(email: str = Body(...), password: str = Body(...)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     user["_id"] = str(user["_id"])
     return {"message": f"Welcome back {user['name']}!", "user": user}
+
+@router.get("/search-users")
+async def search_users(q: str = Query(...)):
+    users = []
+    cursor = db.users.find(
+        {"name": {"$regex": q, "$options": "i"}},  # <- must be $regex
+        {"_id": 1, "name": 1, "email": 1, "company": 1}
+    )
+    async for user in cursor:
+        user["_id"] = str(user["_id"])  # convert ObjectId to string
+        users.append(user)
+    return users
+
+
+
 # ---------------------
 # Defaults per resource
 # ---------------------
@@ -201,3 +218,6 @@ _mk_crud(
     ReadModel=Chat,
     defaults=with_created_and_dt,
 )
+
+
+app.include_router(router) # make sure this is AFTER router definitions
