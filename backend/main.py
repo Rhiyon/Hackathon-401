@@ -7,6 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from bson import ObjectId, errors as bson_errors
 
+import asyncio, tempfile
+from pathlib import Path
+from fastapi import Response
+
+
 # Import your Pydantic models (v2)
 from models import (
     User, UserCreate,
@@ -36,11 +41,50 @@ app.add_middleware(
 # Helpers
 # ---------------------
 
+async def _run_tectonic(tex_path: Path, outdir: Path) -> None:
+    """
+    Run 'tectonic -X compile main.tex --outdir <outdir>' and raise on error.
+    """
+    proc = await asyncio.create_subprocess_exec(
+        "tectonic", "-X", "compile", str(tex_path),
+        "--outdir", str(outdir), "--keep-logs",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    out, err = await proc.communicate()
+    if proc.returncode != 0:
+        msg = ((err or out) or b"").decode("utf-8", "ignore")
+        raise RuntimeError(f"LaTeX compile failed:\n{msg}")
+
+
 def oid(id_str: str) -> ObjectId:
     try:
         return ObjectId(id_str)
     except bson_errors.InvalidId:
         raise HTTPException(status_code=400, detail="Invalid id")
+    
+def _stringify_oids(value):
+    """Recursively convert any bson.ObjectId to str."""
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _stringify_oids(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_stringify_oids(v) for v in value]
+    return value
+
+def _jsonify_doc(doc: dict, id_field: str) -> dict:
+    """
+    Convert a Mongo doc into an API-friendly dict:
+    - _id -> id_field (stringified)
+    - any other ObjectId fields -> str
+    """
+    if not doc:
+        return doc
+    out = _stringify_oids(doc)
+    out[id_field] = str(out.pop("_id"))  # rename _id
+    return out
+
 
 def _serialize_id(doc: dict) -> dict:
     """Mongo ObjectId -> string."""
@@ -84,8 +128,7 @@ def _mk_crud(
     async def list_objs():
         out: List[ReadModel] = []
         async for d in coll.find():
-            d = _serialize_id(d)
-            d[id_field] = d.pop("_id")
+            d = _jsonify_doc(d, id_field)
             out.append(ReadModel(**d))
         return out
 
@@ -95,8 +138,7 @@ def _mk_crud(
         d = await coll.find_one({"_id": oid(obj_id)})
         if not d:
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
-        d = _serialize_id(d)
-        d[id_field] = d.pop("_id")
+        d = _jsonify_doc(d, id_field)
         return ReadModel(**d)
     
     # UPDATE
@@ -116,13 +158,56 @@ def _mk_crud(
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
         return {"message": "Deleted successfully"}
 
+
+# ---------------------
+# Login (Employee / Employer)
+# ---------------------
 @app.post("/login", tags=["users"])
-async def login_user(email: str = Body(...), password: str = Body(...)):
-    user = await db.users.find_one({"email": email, "password": password})
+async def login_user(
+    email: str = Body(...),
+    password: str = Body(...),
+    user_type: str = Body(...)  # "employee" or "employer"
+):
+    # 1️⃣ Find user by email only
+    user = await db.users.find_one({"email": email})
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(status_code=401, detail="No account found with this email.")
+
+    # 2️⃣ Check password
+    if user.get("password") != password:
+        raise HTTPException(status_code=401, detail="Incorrect password.")
+
+    # 3️⃣ Handle missing employerFlag (legacy users)
+    employer_flag = user.get("employerFlag", False)  # default to employee
+
+    # 4️⃣ Check if user type matches
+    if user_type == "employer" and not employer_flag:
+        raise HTTPException(
+            status_code=403,
+            detail="This account is an employee account, not an employer account."
+        )
+    if user_type == "employee" and employer_flag:
+        raise HTTPException(
+            status_code=403,
+            detail="This account is an employer account, not an employee account."
+        )
+
+    # 5️⃣ Convert ObjectId to string for frontend
     user["_id"] = str(user["_id"])
-    return {"message": f"Welcome back {user['name']}!", "user": user}
+
+    return {
+        "message": f"Welcome back {user['name']}!",
+        "user": user
+    }
+
+@app.get("/job_postings/employer/{employer_id}")
+async def get_jobs_by_employer(employer_id: str):
+    jobs = []
+    async for job in db.job_postings.find({"employer_id": employer_id}):
+        job["_id"] = str(job["_id"])
+        job["job_id"] = job.pop("_id")
+        jobs.append(job)
+    return jobs
 
 @app.post("/users/{user_id}/avatar")
 async def upload_avatar(user_id: str, file: UploadFile = File(...)):
@@ -168,6 +253,19 @@ def with_created_and_dt(d: dict) -> dict:
         "created_at": d.get("created_at") or now,
     }
 
+def job_posting_defaults(d: dict) -> dict:
+    now = datetime.utcnow()
+    d["created_at"] = d.get("created_at") or now
+    d["datetime"] = d.get("datetime") or now
+    if "employer_id" not in d:
+        raise HTTPException(status_code=400, detail="Missing employer_id")
+    if "salary_min" not in d or "salary_max" not in d:
+        raise HTTPException(status_code=400, detail="Missing salary range")
+    return d
+
+
+
+
 # ---------------------
 # Users
 # ---------------------
@@ -190,6 +288,56 @@ _mk_crud(
     defaults=with_created_at,
 )
 
+@app.get("/resumes/{resume_id}/pdf", tags=["resumes"])
+async def get_resume_pdf(resume_id: str):
+    # Fetch the resume document by Mongo _id (your CRUD uses ObjectId)
+    doc = await db.resumes.find_one({"_id": oid(resume_id)})
+    if not doc or not doc.get("content"):
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    tex_source = doc["content"]
+
+    # If the stored text is only a fragment (no \documentclass), wrap it
+    if "\\begin{document}" not in tex_source:
+        tex_source = rf"""\documentclass[10pt]{{article}}
+        \usepackage[margin=1in]{{geometry}}
+        \usepackage{{hyperref}}
+        \usepackage{{enumitem}}
+        \begin{document}
+        {tex_source}
+        \end{document}
+        """.strip()
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmpdir = Path(tmp)
+            tex_path = tmpdir / "main.tex"
+            tex_path.write_text(tex_source, encoding="utf-8")
+
+            # If you reference local assets (images/.bib), write them into tmpdir here.
+
+            await _run_tectonic(tex_path, tmpdir)
+
+            pdf_path = tmpdir / "main.pdf"
+            if not pdf_path.exists():
+                raise RuntimeError("PDF not created")
+            pdf_bytes = pdf_path.read_bytes()
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="resume_{resume_id}.pdf"',
+                "Cache-Control": "public, max-age=60",
+            },
+        )
+
+    except RuntimeError as e:
+        # LaTeX errors surface as 400 with the compile log
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}")
+
 # ---------------------
 # Job Postings
 # ---------------------
@@ -198,18 +346,7 @@ _mk_crud(
     id_field="job_id",
     CreateModel=JobPostingCreate,
     ReadModel=JobPosting,
-    defaults=with_created_and_dt,
-)
-
-# ---------------------
-# Applications
-# ---------------------
-_mk_crud(
-    coll_name="applications",
-    id_field="application_id",
-    CreateModel=ApplicationCreate,
-    ReadModel=Application,
-    defaults=with_created_and_dt,
+    defaults=job_posting_defaults, 
 )
 
 # ---------------------

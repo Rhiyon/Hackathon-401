@@ -1,6 +1,7 @@
-// pages/resumes/[id].tsx
 import { GetServerSideProps } from "next";
 import { useCallback, useState } from "react";
+import { Pencil } from "lucide-react";
+
 
 type Resume = {
   resume_id: string;
@@ -30,27 +31,7 @@ export default function ResumePage({ resume }: Props) {
   const [copied, setCopied] = useState(false);
   const apiPublic =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-  const onCopy = useCallback(async () => {
-    if (!resume) return;
-    await navigator.clipboard.writeText(resume.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  }, [resume]);
-
-  const onDownload = useCallback(() => {
-    if (!resume) return;
-    const blob = new Blob([resume.content], {
-      type: "text/x-tex;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `resume-${resume.resume_id}.tex`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [resume]);
-
+    
   if (!resume) {
     return (
       <main className="mx-auto max-w-5xl p-8">
@@ -65,11 +46,11 @@ export default function ResumePage({ resume }: Props) {
       </main>
     );
   }
-
-  const created = new Date(resume.created_at).toLocaleDateString();
-  const updated = resume.updated_at
-    ? new Date(resume.updated_at).toLocaleDateString()
-    : null;
+    const pdfUrl = `${apiPublic}/resumes/${resume.resume_id}/pdf`;
+    const created = new Date(resume.created_at).toLocaleDateString();
+    const updated = resume.updated_at
+        ? new Date(resume.updated_at).toLocaleDateString()
+        : null;
 
   return (
     <main className="mx-auto max-w-5xl p-8 space-y-6 bg-blue-50 min-h-screen">
@@ -87,33 +68,29 @@ export default function ResumePage({ resume }: Props) {
 
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={onCopy}
-            className="rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
-          >
-            {copied ? "Copied ✓" : "Copy"}
-          </button>
-          <button
-            onClick={onDownload}
-            className="rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-semibold text-white shadow hover:bg-purple-700 active:scale-[0.99]"
-          >
-            Download .tex
-          </button>
-          <a
-            href={`${apiPublic}/resumes/${resume.resume_id}/pdf`}
+        <a
+            href="https://www.overleaf.com/project" 
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
-          >
-            View PDF
-          </a>
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
+        >
+        <span>overleaf</span>
+        <Pencil className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+        </a>
         </div>
       </header>
-
       {/* LaTeX content */}
-      <pre className="whitespace-pre-wrap rounded-xl bg-gray-50 p-6 font-mono text-[13px] leading-6 text-gray-800 border-0 shadow-sm">
-        {resume.content}
-      </pre>
+      <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="p-2">
+        <iframe
+          src={pdfUrl}
+          width="100%"
+          height={900}
+          style={{ border: "none" }}
+          title="Resume PDF"
+        />
+        </div>
+      </section>
     </main>
   );
 }

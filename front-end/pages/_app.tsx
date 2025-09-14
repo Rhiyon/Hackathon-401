@@ -7,7 +7,7 @@ function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   // ✅ hide sidebar on /authPage
-  const hideSidebar = router.pathname === "/authPage";
+ const hideSidebar = ["/authPage", "/employer/dashboard"].includes(router.pathname);
 
   return (
     <div style={{ display: "flex" }}>
