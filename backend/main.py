@@ -237,6 +237,113 @@ async def search_users(q: str = Query(...)):
 
 
 
+
+@app.get("/jobs")
+async def get_all_jobs():
+    jobs = []
+    async for job in db.job_postings.find():
+        job["_id"] = str(job["_id"])
+        job["job_id"] = job["_id"]
+        jobs.append(job)
+    return jobs
+
+
+@app.get("/applications/user/{user_id}")
+async def get_applications_by_user(user_id: str):
+    applications = []
+    async for app in db.applications.find({"user_id": user_id}):
+        app["_id"] = str(app["_id"])
+        app["application_id"] = app.pop("_id")
+        applications.append(app)
+    return applications
+
+@app.post("/applications")
+async def apply_for_job(payload: ApplicationCreate):
+    # check if job exists
+    job = await db.job_postings.find_one({"_id": oid(payload.job_id)})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # prevent duplicate applications (same user + same job)
+    existing = await db.applications.find_one({
+        "job_id": payload.job_id,
+        "user_id": payload.user_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already applied for this job")
+
+    app_doc = payload.model_dump(exclude_none=True)
+    app_doc["created_at"] = datetime.utcnow()
+
+    result = await db.applications.insert_one(app_doc)
+    return {
+        "application_id": str(result.inserted_id),
+        **app_doc,
+    }
+
+@app.get("/jobs/{job_id}")
+async def get_job(job_id: str):
+    job = await db.job_postings.find_one({"_id": oid(job_id)})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    job["_id"] = str(job["_id"])
+    job["job_id"] = job["_id"]
+    return job
+
+
+@app.post("/apply/{job_id}", tags=["applications"])
+async def apply_for_job(job_id: str, payload: dict = Body(...)):
+    """
+    Apply to a job by job_id.
+    Payload must include:
+    {
+        "user_id": "...",
+        "resume_id": "..."
+    }
+    """
+
+    # 1️⃣ Validate job_id and fetch job
+    try:
+        obj_id = ObjectId(job_id)
+    except bson_errors.InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid job_id")
+
+    job = await db.job_postings.find_one({"_id": obj_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # 2️⃣ Extract user_id and resume_id
+    user_id = payload.get("user_id")
+    resume_id = payload.get("resume_id")
+    if not user_id or not resume_id:
+        raise HTTPException(status_code=400, detail="Missing user_id or resume_id")
+
+    # 3️⃣ Prevent duplicate applications
+    existing = await db.applications.find_one({
+        "job_id": job_id,   # stored as string
+        "user_id": user_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already applied for this job")
+
+    # 4️⃣ Create application
+    app_doc = {
+        "job_id": job_id,       # store as string
+        "user_id": user_id,
+        "resume_id": resume_id,
+        "status": "applied",
+        "applied_at": datetime.utcnow(),
+        "created_at": datetime.utcnow()
+    }
+
+    result = await db.applications.insert_one(app_doc)
+
+    # 5️⃣ Return created application
+    return {
+        "application_id": str(result.inserted_id),
+        **app_doc
+    }
+
 # ---------------------
 # Defaults per resource
 # ---------------------

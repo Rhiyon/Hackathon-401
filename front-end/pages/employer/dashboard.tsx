@@ -28,6 +28,13 @@ export default function EmployerDashboard() {
   });
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      router.push("/authPage");
+    }
+  }, []);
+
   const user =
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("user") || "{}")
@@ -128,7 +135,7 @@ export default function EmployerDashboard() {
   // ---------------------
   const handleLogout = () => {
     localStorage.removeItem("user");
-    router.push("/"); // redirect to login page
+    router.push("/authPage"); // redirect to login page
   };
 
   return (

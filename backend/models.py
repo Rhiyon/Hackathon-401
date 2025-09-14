@@ -81,26 +81,29 @@ class JobPosting(JobPostingBase):
 # =========================
 # Application Models
 # =========================
+
 class ApplicationBase(BaseModel):
-    status: Optional[str] = "submitted"
+    status: Optional[str] = "applied"   # default instead of "submitted"
 
 
 class ApplicationCreate(ApplicationBase):
-    job_id: str
-    user_uid: str
-    resume_id: str
+    job_id: str           # which job this is for
+    employer_id: str      # the employer who posted the job
+    employee_id: str      # the user who applied
+    resume_id: Optional[str] = None     # optional, in case they attach a resume
+    applied_at: Optional[datetime] = None
 
 
 class Application(ApplicationBase):
     application_id: str
     job_id: str
-    user_uid: str
-    resume_id: str
-    datetime: datetime
+    employer_id: str
+    employee_id: str
+    resume_id: Optional[str] = None
+    applied_at: datetime
 
     class Config:
         from_attributes = True
-
 
 # =========================
 # Notification Models

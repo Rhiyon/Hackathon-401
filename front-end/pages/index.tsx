@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Home.module.css";
-import { FaSearch,FaSignOutAlt } from "react-icons/fa";
+import { FaRegQuestionCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import router from "next/router";
 import FilterTabs from "../components/FilterTabs";
 import ApplicationCard from "../components/ApplicationCard";
-import { mockApplications } from "../data/mockApplications";
-import { JobApplication, FilterStatus } from "../types";
+import JobCard from "../components/JobCard"; // ✅ new component for job postings
+import { JobApplication, FilterStatus, JobPosting } from "../types";
 
 interface User {
   _id: string;
@@ -23,9 +24,10 @@ const mockUsers: User[] = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("applications");
-  const [applications, setApplications] = useState<JobApplication[]>([]); // State to hold applications data
-  const [loading, setLoading] = useState(true); // State to track loading status
-  const [error, setError] = useState<string | null>(null); // State to handle errors
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,9 +36,8 @@ export default function Home() {
   const searchRef = useRef<HTMLDivElement>(null);
   const underlineRef = useRef<HTMLDivElement>(null);
   const navbarRef = useRef<HTMLUListElement>(null);
-  // const underlineRef = useRef(null);
-  // const navbarRef = useRef(null);
 
+  // Redirect if user not logged in
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (!user) {
@@ -44,39 +45,62 @@ export default function Home() {
     }
   }, []);
 
-  // Animate the underline whenever the activeTab changes
+  // Animate underline for navbar
   useEffect(() => {
     if (underlineRef.current && navbarRef.current) {
       const activeElement = navbarRef.current.querySelector(
         `.${styles.active}`
       );
       if (activeElement) {
-        // Get the position and width relative to the parent ul
         const activeRect = activeElement.getBoundingClientRect();
         const parentRect = navbarRef.current.getBoundingClientRect();
-
-        // Calculate the translateX value to move the underline
         const transformValue = activeRect.left - parentRect.left;
-
-        // Apply the styles to the underline
         underlineRef.current.style.transform = `translateX(${transformValue}px)`;
         underlineRef.current.style.width = `${activeRect.width}px`;
       }
     }
-  }, [activeTab]); // This effect runs every time activeTab changes
+  }, [activeTab]);
 
-  // Use mock data for now
+  // Fetch jobs + applications
   useEffect(() => {
-    setApplications(mockApplications);
-    setLoading(false);
+    const fetchData = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        if (!user || !user._id) {
+          router.push("/authPage");
+          return;
+        }
+
+        // Fetch jobs
+        const jobsRes = await fetch("http://localhost:8000/jobs");
+        if (!jobsRes.ok) throw new Error("Failed to fetch jobs");
+        const jobsData = await jobsRes.json();
+        setJobs(jobsData);
+
+        // Fetch applications
+        const appsRes = await fetch(
+          `http://localhost:8000/applications/user/${user._id}`
+        );
+        if (!appsRes.ok) throw new Error("Failed to fetch applications");
+        const appsData = await appsRes.json();
+        setApplications(appsData);
+      } catch (err: any) {
+        console.error("Error fetching data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  // Filter applications based on active filter
-  const filteredApplications = applications.filter(app => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'applied') return app.status === 'applied';
-    if (activeFilter === 'interviews') return app.status === 'interview';
-    if (activeFilter === 'offers') return app.status === 'offer';
+  // Filter applications
+  const filteredApplications = applications.filter((app) => {
+    if (activeFilter === "all") return true; // ✅ "all" only matters for jobs
+    if (activeFilter === "applied") return app.status === "applied";
+    if (activeFilter === "interviews") return app.status === "interview";
+    if (activeFilter === "offers") return app.status === "offer";
     return true;
   });
 
@@ -120,11 +144,10 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  // You can now render a loading state, error message, or your data
   if (loading) {
     return (
       <div className={styles.container}>
-        <div style={{ color: '#333', padding: '2rem' }}>Loading applications...</div>
+        <div style={{ color: "#333", padding: "2rem" }}>Loading...</div>
       </div>
     );
   }
@@ -132,7 +155,7 @@ export default function Home() {
   if (error) {
     return (
       <div className={styles.container}>
-        <div style={{ color: '#333', padding: '2rem' }}>Error: {error}</div>
+        <div style={{ color: "#333", padding: "2rem" }}>Error: {error}</div>
       </div>
     );
   }
@@ -201,23 +224,30 @@ export default function Home() {
           </button>
         </div>
       </nav>
-      
+
       {activeTab === "applications" && (
         <div className={styles.applicationsContent}>
           <div className={styles.applicationsHeader}>
-            <h1>Applications</h1>
-            <FilterTabs 
-              activeFilter={activeFilter} 
-              onFilterChange={setActiveFilter} 
+            <h1>
+              {activeFilter === "all" ? "All Jobs" : "Your Applications"}
+            </h1>
+            <FilterTabs
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
             />
           </div>
+
           <div className={styles.applicationsList}>
-            {filteredApplications.map((application) => (
-              <ApplicationCard 
-                key={application.id} 
-                application={application} 
-              />
-            ))}
+            {activeFilter === "all"
+              ? jobs.map((job) => (
+                  <JobCard key={job.job_id} job={job} /> // ✅ show jobs
+                ))
+              : filteredApplications.map((application) => (
+                  <ApplicationCard
+                    key={application.application_id}
+                    application={application}
+                  />
+                ))}
           </div>
         </div>
       )}

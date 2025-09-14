@@ -1,0 +1,108 @@
+/* ApplyPage.module.css (pure/local selectors only) */
+
+.container {
+  max-width: 700px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1f2937;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #111827;
+  text-align: center;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.metaItem {
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.label {
+  color: #374151;
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #374151;
+  margin-top: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* CTA */
+.applyBtn {
+  display: block;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.applyBtn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+.applyBtn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* small helpers */
+.loading {
+  color: #334155;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.error {
+  color: #b91c1c;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+/* responsive */
+@media (max-width: 768px) {
+  .container {
+    margin: 2rem 1rem;
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .applyBtn {
+    font-size: 1rem;
+    padding: 0.8rem 1.2rem;
+  }
+}

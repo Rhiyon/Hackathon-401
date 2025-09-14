@@ -1,0 +1,92 @@
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.cardLeft {
+  flex: 1;
+}
+
+.logoPlaceholder {
+  width: 50px;
+  height: 50px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.jobInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.jobTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.company {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.datePosted {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.cardMiddle {
+  flex: 2;
+  margin-left: 16px;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #f3f4f6;
+  color: #111;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.cardRight {
+  display: flex;
+  align-items: center;
+}
+
+.applyBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.applyBtn:hover {
+  background: #1d4ed8;
+}
