@@ -1,8 +1,10 @@
 from typing import List, Dict, Callable, Any
 from datetime import datetime
-
-from fastapi import FastAPI, HTTPException,Body
+import base64
+from fastapi import FastAPI, HTTPException, Body, Query, APIRouter, UploadFile, File
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from bson import ObjectId, errors as bson_errors
 
 import asyncio, tempfile
@@ -23,6 +25,8 @@ from database import db  # Motor async client/DB
 
 app = FastAPI(title="Hackathon API")
 
+users_collection = db.users
+router = APIRouter()
 
 app.add_middleware(
     CORSMiddleware,
@@ -204,6 +208,35 @@ async def get_jobs_by_employer(employer_id: str):
         job["job_id"] = job.pop("_id")
         jobs.append(job)
     return jobs
+
+@app.post("/users/{user_id}/avatar")
+async def upload_avatar(user_id: str, file: UploadFile = File(...)):
+    file_bytes = await file.read()
+    file_b64 = base64.b64encode(file_bytes).decode("utf-8")
+    res = await db.users.update_one(
+        {"_id": oid(user_id)},
+        {"$set": {"avatar_base64": file_b64}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Avatar uploaded successfully", "avatar_base64": file_b64}
+
+
+@router.get("/search-users")
+async def search_users(q: str = Query(...)):
+    users = []
+    cursor = db.users.find(
+        {"name": {"$regex": q, "$options": "i"}},  # <- must be $regex
+        {"_id": 1, "name": 1, "email": 1, "company": 1}
+    )
+    async for user in cursor:
+        user["_id"] = str(user["_id"])  # convert ObjectId to string
+        users.append(user)
+    return users
+
+
+
+
 # ---------------------
 # Defaults per resource
 # ---------------------
@@ -337,3 +370,6 @@ _mk_crud(
     ReadModel=Chat,
     defaults=with_created_and_dt,
 )
+
+
+app.include_router(router) # make sure this is AFTER router definitions

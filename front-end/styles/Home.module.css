@@ -83,3 +83,99 @@
   flex-direction: column;
   gap: 1rem;
 }
+
+/* Search container inside navbar */
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #4f46e5; /* purple accent */
+}
+
+.searchInput {
+  width: 0;
+  opacity: 0;
+  margin-left: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  transition: all 0.3s ease;
+  outline: none;
+  background-color: #f3f4f6;
+}
+
+.searchInput.active {
+  width: 200px;
+  opacity: 1;
+}
+
+/* Search results dropdown */
+.searchResults {
+  position: absolute;
+  top: 3rem; /* slightly below the input */
+  left: 0;
+  margin-left: 20px;
+  width: 220px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 50;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb; /* light gray border */
+  backdrop-filter: blur(4px); /* modern glassy effect */
+}
+
+/* Individual user item */
+.searchResultItem {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.searchResultItem:hover {
+  background-color: #f3f4f6; /* light gray hover */
+  transform: translateX(2px); /* subtle movement */
+}
+
+.searchResultItem strong {
+  color: #111827; /* dark text for name */
+  font-weight: 600;
+}
+
+.searchResultItem span {
+  color: #6b7280; /* gray text for email/company */
+  font-size: 0.875rem;
+}
+
+/* Message when no results found or loading */
+.searchMessage {
+  padding: 0.6rem 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Scrollbar customization (optional) */
+.searchResults::-webkit-scrollbar {
+  width: 6px;
+}
+
+.searchResults::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+.searchResults::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+}
