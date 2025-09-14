@@ -18,7 +18,7 @@ export default function Sidebar() {
 
   const bottomNavItems = [
     { name: "Notifications", path: "/notifications", icon: <FaBell />, isNotification: true },
-    { name: "Profile", path: "/profile", icon: <FaUserCircle /> },
+    { name: "Profile", path: "/profile/68c5f7690cde18128bb12197", icon: <FaUserCircle /> },
   ];
 
   return (
