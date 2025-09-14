@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Home.module.css";
-import { FaRegQuestionCircle, FaCog,FaSignOutAlt } from "react-icons/fa";
+import { FaSearch,FaSignOutAlt } from "react-icons/fa";
 import router from "next/router";
 import FilterTabs from "../components/FilterTabs";
 import ApplicationCard from "../components/ApplicationCard";
@@ -13,6 +13,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true); // State to track loading status
   const [error, setError] = useState<string | null>(null); // State to handle errors
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLDivElement>(null);
   const underlineRef = useRef<HTMLDivElement>(null);
   const navbarRef = useRef<HTMLUListElement>(null);
   // const underlineRef = useRef(null);
@@ -60,6 +63,18 @@ export default function Home() {
     if (activeFilter === 'offers') return app.status === 'offer';
     return true;
   });
+
+  // SEARCH
+  // Clicking outside closes the search
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // You can now render a loading state, error message, or your data
   if (loading) {
@@ -109,14 +124,23 @@ export default function Home() {
           <div ref={underlineRef} className={styles.underline}></div>
         </ul>
         <div className={styles.navRight}>
-          <a href="#">
-            <FaRegQuestionCircle />
-            Support
-          </a>
-          <a href="#">
-            <FaCog />
-            Settings
-          </a>
+          {/* Search */}
+          <div className={styles.searchContainer} ref={searchRef}>
+            <button
+              className={styles.searchIcon}
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <FaSearch />
+            </button>
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`${styles.searchInput} ${searchOpen ? styles.active : ""}`}
+            />
+          </div>
+          
           <button
             onClick={() => {
               localStorage.removeItem("user");

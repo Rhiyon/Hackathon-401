@@ -134,3 +134,35 @@
   flex-direction: column;
   gap: 0;
 }
+
+/* Search container inside navbar */
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #4f46e5; /* purple accent */
+}
+
+.searchInput {
+  width: 0;
+  opacity: 0;
+  margin-left: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  transition: all 0.3s ease;
+  outline: none;
+  background-color: #f3f4f6;
+}
+
+.searchInput.active {
+  width: 200px;
+  opacity: 1;
+}
