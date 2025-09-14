@@ -172,6 +172,7 @@
   position: absolute;
   top: 3rem; /* slightly below the input */
   left: 0;
+  margin-left: 20px;
   width: 220px;
   background: #ffffff;
   border-radius: 12px;

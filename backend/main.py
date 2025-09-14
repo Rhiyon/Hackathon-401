@@ -1,8 +1,10 @@
 from typing import List, Dict, Callable, Any
 from datetime import datetime
-
-from fastapi import FastAPI, HTTPException, Body, Query, APIRouter
+import base64
+from fastapi import FastAPI, HTTPException, Body, Query, APIRouter, UploadFile, File
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from bson import ObjectId, errors as bson_errors
 
 # Import your Pydantic models (v2)
@@ -114,7 +116,6 @@ def _mk_crud(
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
         return {"message": "Deleted successfully"}
 
-
 @app.post("/login", tags=["users"])
 async def login_user(email: str = Body(...), password: str = Body(...)):
     user = await db.users.find_one({"email": email, "password": password})
@@ -122,6 +123,19 @@ async def login_user(email: str = Body(...), password: str = Body(...)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     user["_id"] = str(user["_id"])
     return {"message": f"Welcome back {user['name']}!", "user": user}
+
+@app.post("/users/{user_id}/avatar")
+async def upload_avatar(user_id: str, file: UploadFile = File(...)):
+    file_bytes = await file.read()
+    file_b64 = base64.b64encode(file_bytes).decode("utf-8")
+    res = await db.users.update_one(
+        {"_id": oid(user_id)},
+        {"$set": {"avatar_base64": file_b64}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Avatar uploaded successfully", "avatar_base64": file_b64}
+
 
 @router.get("/search-users")
 async def search_users(q: str = Query(...)):
@@ -134,6 +148,7 @@ async def search_users(q: str = Query(...)):
         user["_id"] = str(user["_id"])  # convert ObjectId to string
         users.append(user)
     return users
+
 
 
 

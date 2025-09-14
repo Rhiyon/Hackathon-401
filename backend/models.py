@@ -22,6 +22,7 @@ class User(UserBase):
     uid: str
     employer_uid: Optional[int] = None
     resume_id: Optional[int] = None
+    avatar_base64: Optional[str] = None
 
     class Config:
         from_attributes = True
