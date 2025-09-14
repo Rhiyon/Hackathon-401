@@ -81,41 +81,10 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <nav className={styles.navbar}>
-        <ul ref={navbarRef}>
-          <li
-            onClick={() => setActiveTab("contracts")}
-            className={activeTab === "contracts" ? styles.active : ""}
-          >
-            <a href="#">Contracts</a>
-          </li>
-          <li
-            onClick={() => setActiveTab("offers")}
-            className={activeTab === "offers" ? styles.active : ""}
-          >
-            <a href="#">Offers</a>
-          </li>
-          <li
-            onClick={() => setActiveTab("applications")}
-            className={activeTab === "applications" ? styles.active : ""}
-          >
-            <a href="#">Applications</a>
-          </li>
-          <li
-            onClick={() => setActiveTab("interviews")}
-            className={activeTab === "interviews" ? styles.active : ""}
-          >
-            <a href="#">Interviews</a>
-          </li>
-          <div ref={underlineRef} className={styles.underline}></div>
-        </ul>
         <div className={styles.navRight}>
           <a href="#">
             <FaRegQuestionCircle />
             Support
-          </a>
-          <a href="#">
-            <FaCog />
-            Settings
           </a>
           <button
             onClick={() => {

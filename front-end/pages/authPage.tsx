@@ -4,7 +4,8 @@ import styles from "../styles/AuthPage.module.css";
 import { useRouter } from "next/router";
 
 export default function AuthPage() {
-  const [isRegister, setIsRegister] = useState(false); // 👈 start in login mode
+  const [isRegister, setIsRegister] = useState(false);
+  const [userType, setUserType] = useState<"employee" | "employer">("employee"); // switch state
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -20,40 +21,60 @@ export default function AuthPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage("");
+  e.preventDefault();
+  setMessage("");
 
-    try {
-      if (isRegister) {
-        // ✅ Register new user
-        const res = await axios.post("http://localhost:8000/users", {
-          ...formData,
-          age: parseInt(formData.age, 10),
-        });
-        setMessage(`✅ Registered successfully as ${res.data.name}. Please log in.`);
-        setIsRegister(false); // 👈 switch back to login mode
-        setFormData({ name: "", age: "", email: "", company: "", password: "" });
-      } else {
-        // ✅ Login user
-        const res = await axios.post("http://localhost:8000/login", {
+  try {
+    if (isRegister) {
+      const res = await axios.post("http://localhost:8000/users", {
+        ...formData,
+        age: parseInt(formData.age, 10),
+        employerFlag: userType === "employer",
+      });
+      setMessage(
+        `Registered successfully as ${res.data.name}. Please log in.`
+      );
+      setIsRegister(false);
+      setFormData({
+        name: "",
+        age: "",
+        email: "",
+        company: "",
+        password: "",
+      });
+    } else {
+      // ✅ Here is the key change: validateStatus
+      const res = await axios.post(
+        "http://localhost:8000/login",
+        {
           email: formData.email,
           password: formData.password,
-        });
-
-        // Save user info in localStorage
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        // Redirect to index page
-        router.push("/");
-      }
-    } catch (err: any) {
-      console.error("Auth error:", err);
-      setMessage(
-        err.response?.data?.detail ||
-          "❌ Something went wrong. Please try again."
+          user_type: userType,
+        },
+        {
+          validateStatus: () => true, // ← all responses, including 401/403, are returned as normal
+        }
       );
+
+      // Now handle status manually
+      if (res.status === 200) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        router.push(userType === "employer" ? "/employer/dashboard" : "/");
+      } else if (res.status === 401) {
+        setMessage("User not found or incorrect password.");
+      } else if (res.status === 403) {
+        setMessage(`Try Again!`);
+      } else {
+        setMessage("Something went wrong. Please try again.");
+      }
     }
-  };
+  } catch (err) {
+    // this will only catch network errors or other unexpected exceptions
+    console.error("Unexpected error:", err);
+    setMessage("Unexpected error. Please try again.");
+  }
+};
+
 
   return (
     <div className={styles.authContainer}>
@@ -64,6 +85,21 @@ export default function AuthPage() {
             ? "Join us and start applying today!"
             : "Log in to continue."}
         </p>
+
+        {/* 👇 User Type Switch */}
+        <div className={styles.userTypeSwitch}>
+          <label className={styles.switch}>
+            <input
+              type="checkbox"
+              checked={userType === "employer"}
+              onChange={() =>
+                setUserType(userType === "employee" ? "employer" : "employee")
+              }
+            />
+            <span className={styles.slider}></span>
+          </label>
+          <span className={styles.switchLabel}>{userType}</span>
+        </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {isRegister && (
@@ -87,9 +123,10 @@ export default function AuthPage() {
               <input
                 type="text"
                 name="company"
-                placeholder="Company"
+                placeholder="Company Name"
                 value={formData.company}
                 onChange={handleChange}
+                required
               />
             </>
           )}
@@ -102,7 +139,6 @@ export default function AuthPage() {
             onChange={handleChange}
             required
           />
-
           <input
             type="password"
             name="password"

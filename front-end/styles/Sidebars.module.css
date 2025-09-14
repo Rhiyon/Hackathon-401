@@ -1,6 +1,7 @@
-/* Sidebars.module.css */
-
 .sidebar {
+  position: fixed;       /* Fix sidebar position */
+  top: 0;               /* Align to top */
+  left: 0;              /* Align to left */
   width: 60px;
   height: 100vh;
   background-color: #f8f9fa;
@@ -9,28 +10,31 @@
   flex-direction: column;
   align-items: center;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+  justify-content: space-between;
+  z-index: 1000;        /* Ensures sidebar stays above content */
 }
+
 
 .logo {
   display: none;
 }
 
+/* Container for main navigation items */
 .mainNav {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
   align-items: center;
-  margin-bottom: auto; /* Pushes the next element to the bottom */
 }
 
+/* Container for user navigation (profile, notifications, settings) pinned to bottom */
 .userNav {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
   align-items: center;
-  margin-top: auto; /* Pushes this element to the bottom */
 }
 
 .navItem {
@@ -42,7 +46,6 @@
   border-radius: 50%;
   color: #6c757d;
   font-size: 1.25rem;
-  /* Add 'transform 0.2s ease' to the transition property */
   transition: background-color 0.5s ease, color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
@@ -58,8 +61,6 @@
   color: white;
   transform: scale(1.1);
 }
-
-
 /* Position relative on sidebar so popup can align */
 .sidebar {
   position: relative;

@@ -1,109 +1,222 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
 .authContainer {
+  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 100%; 
-  height: 100vh;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  font-family: Arial, sans-serif;
+  align-items: center;
+  background-color: #18181b; /* dark charcoal */
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #f4f4f5; /* light gray text */
 }
-
-
 
 .authCard {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 1rem;
-  width: 350px;
+  background-color: #232239; /* dark blue-gray card */
+  padding: 3rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.85);
+  width: 100%;
+  max-width: 420px;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-
 .authCard h2 {
+  font-size: 2.1rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #333;
-  font-size: 1.8rem;
+  color: #f4f4f5; /* off-white */
 }
 
 .subText {
-  margin-bottom: 1.5rem;
-  color: #666;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  color: #a1a1aa; /* muted gray */
+  margin-bottom: 2rem;
 }
+
+.userTypeSwitch {
+  display: flex;
+  align-items: center; /* vertically center switch and label */
+  justify-content: center;
+  gap: 0.75rem;        /* spacing between switch and label */
+  margin-bottom: 2rem;
+  font-weight: 600;
+  color: #c7c7d9;      /* adjust for dark mode */
+}
+
+/* Ensuring switch dimensions and relative positioning */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;      /* don't shrink */
+  vertical-align: middle;
+}
+
+.switchLabel {
+  font-size: 1rem;
+  text-transform: capitalize;
+  color: #d1d5db;
+  user-select: none;   /* prevent accidental text selection */
+  white-space: nowrap; /* prevent wrapping */
+}
+
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background-color: #404055; /* dark gray */
+  transition: 0.4s;
+  border-radius: 9999px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #1f1f2e;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+  background-color: #d6d6ff;
+}
+
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1.25rem;
 }
 
 .form input {
-  padding: 0.85rem;
-  border: 1px solid #ddd;
-  border-radius: 0.6rem;
+  padding: 0.85rem 1rem;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1.5px solid #4b506d; /* darker border */
+  border-radius: 8px;
+  background-color: #2a2a44; /* dark blue-gray */
+  color: #f4f4f5;
+  outline: none;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.form input::placeholder {
+  color: #8888a3; /* muted placeholder */
 }
 
 .form input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 6px rgba(102, 126, 234, 0.5);
-  outline: none;
+  border-color: #6366f1; /* indigo focus */
+  background-color: #232239;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
 }
 
 .submitBtn {
-  margin-top: 1rem;
-  padding: 0.9rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 8px;
   border: none;
-  border-radius: 0.6rem;
-  font-size: 1.05rem;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+  color: white;
+  transition: background 0.3s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
 .submitBtn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
+  background: linear-gradient(90deg, #4f46e5, #4338ca);
 }
 
 .switchText {
-  margin-top: 1.2rem;
-  font-size: 0.9rem;
+  margin-top: 1.8rem;
+  font-size: 0.94rem;
+  color: #a1a1aa;
 }
 
 .switchText span {
-  color: #667eea;
+  color: #6366f1;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
-  transition: color 0.2s;
 }
 
 .switchText span:hover {
-  color: #764ba2;
+  text-decoration: underline;
 }
 
 .message {
   margin-top: 1rem;
-  font-size: 0.9rem;
-  color: #444;
+  font-size: 0.95rem;
+  color: #ef4444; /* error red */
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  vertical-align: middle;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #37354a; /* dark gray for track */
+  border-radius: 24px;
+  transition: background 0.3s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  background: #232239; /* matches card bg */
+  border-radius: 50%;
+  transition: transform 0.3s, background 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+input:checked + .slider {
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+  background: #d6d6ff; /* light blue knob */
+}
+
+/* Optional: Focus ring for accessibility */
+.switch input:focus + .slider {
+  box-shadow: 0 0 1px 3px #6366f170;
+  outline: none;
 }
