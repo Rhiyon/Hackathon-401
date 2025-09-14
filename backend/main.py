@@ -37,6 +37,29 @@ def oid(id_str: str) -> ObjectId:
         return ObjectId(id_str)
     except bson_errors.InvalidId:
         raise HTTPException(status_code=400, detail="Invalid id")
+    
+def _stringify_oids(value):
+    """Recursively convert any bson.ObjectId to str."""
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _stringify_oids(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_stringify_oids(v) for v in value]
+    return value
+
+def _jsonify_doc(doc: dict, id_field: str) -> dict:
+    """
+    Convert a Mongo doc into an API-friendly dict:
+    - _id -> id_field (stringified)
+    - any other ObjectId fields -> str
+    """
+    if not doc:
+        return doc
+    out = _stringify_oids(doc)
+    out[id_field] = str(out.pop("_id"))  # rename _id
+    return out
+
 
 def _serialize_id(doc: dict) -> dict:
     """Mongo ObjectId -> string."""
@@ -80,8 +103,7 @@ def _mk_crud(
     async def list_objs():
         out: List[ReadModel] = []
         async for d in coll.find():
-            d = _serialize_id(d)
-            d[id_field] = d.pop("_id")
+            d = _jsonify_doc(d, id_field)
             out.append(ReadModel(**d))
         return out
 
@@ -91,8 +113,7 @@ def _mk_crud(
         d = await coll.find_one({"_id": oid(obj_id)})
         if not d:
             raise HTTPException(status_code=404, detail=f"{coll_name[:-1].capitalize()} not found")
-        d = _serialize_id(d)
-        d[id_field] = d.pop("_id")
+        d = _jsonify_doc(d, id_field)
         return ReadModel(**d)
     
     # UPDATE
