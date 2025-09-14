@@ -15,6 +15,7 @@ from models import (
     Chat, ChatCreate,
 )
 from database import db  # Motor async client/DB
+from routes.applications import router as applications_router
 
 app = FastAPI(title="Hackathon API")
 
@@ -26,6 +27,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(applications_router)
 
 
 # ---------------------
@@ -162,6 +166,7 @@ async def get_jobs_by_employer(employer_id: str):
         job["job_id"] = job.pop("_id")
         jobs.append(job)
     return jobs
+
 # ---------------------
 # Defaults per resource
 # ---------------------

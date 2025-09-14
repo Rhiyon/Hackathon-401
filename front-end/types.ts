@@ -9,6 +9,17 @@ export interface JobApplication {
   logo?: string;
 }
 
+export interface JobPosting {
+  id: string;
+  jobTitle: string;
+  company: string;
+  location: string;
+  payPerHour: string;
+  datePosted: string;
+  description: string;
+  employerId: string;
+}
+
 export type FilterStatus = 'all' | 'applied' | 'interviews' | 'offers';
 
 export interface FilterTabsProps {
